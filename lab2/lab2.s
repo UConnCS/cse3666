@@ -1,8 +1,5 @@
 # CSE 3666 Lab 2
 
-.data
-newline: .string  "\n"
-
 .globl main
 .text
 
@@ -18,9 +15,9 @@ main:
     ecall
     
     # print newline
-    la      a0, newline # load the address of the newline string
-    li      a7, 4       # set the system call number to (PrintString)
-    ecall               # system call
+    addi    a7, x0, 11
+    addi    a0, x0, 10
+    ecall
     
     addi    a7, x0, 1   # set system call number to 1 (PrintInt)
     addi    t0, t0, 32  # i = 32 (traverse bits backwards)
@@ -41,11 +38,11 @@ main:
     	beq t0, x0, loop_exit
     	
     loop_exit:
-   	    # print newline
-    	la a0, newline 
-    	li a7, 4
-    	ecall
-
-        # exit program with exit code 0
-    	addi    a7, x0, 10      
+        # print newline
+        addi    a7, x0, 11
+        addi    a0, x0, 10
         ecall
+	
+    # exit program with exit code 0
+    addi    a7, x0, 10      
+    ecall

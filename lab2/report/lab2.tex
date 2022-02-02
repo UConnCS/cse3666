@@ -3,7 +3,7 @@
 
 \title{CSE3666 — Lab 2}
 \author{Mike Medved}
-\date{January 29th, 2022}
+\date{February 1st, 2022}
 
 \usepackage{color}
 \usepackage{amsthm}
@@ -13,6 +13,12 @@
 \usepackage{listings}
 \usepackage{xcolor}
 \usepackage{listings}
+
+\newcommand*\BitAnd{\mathbin{\&}}
+\newcommand*\BitOr{\mathbin{|}}
+\newcommand*\ShiftLeft{\ll}
+\newcommand*\ShiftRight{\gg}
+\newcommand*\BitNeg{\ensuremath{\mathord{\sim}}}
 
 \lstset{frame=tb,
     language=[LaTeX]TeX,
@@ -140,9 +146,6 @@ Here are some example inputs/outputs of the program.
     \begin{lstlisting}
     # CSE 3666 Lab 2
 
-    .data
-    newline: .string  "\n"
-    
     .globl main
     .text
     
@@ -158,9 +161,9 @@ Here are some example inputs/outputs of the program.
         ecall
         
         # print newline
-        la      a0, newline # load the address of the newline string
-        li      a7, 4       # set the system call number to (PrintString)
-        ecall               # system call
+        addi    a7, x0, 11
+        addi    a0, x0, 10
+        ecall
         
         addi    a7, x0, 1   # set system call number to 1 (PrintInt)
         addi    t0, t0, 32  # i = 32 (traverse bits backwards)
@@ -181,14 +184,38 @@ Here are some example inputs/outputs of the program.
             beq t0, x0, loop_exit
             
         loop_exit:
-                # print newline
-            la a0, newline 
-            li a7, 4
+            # print newline
+            addi    a7, x0, 11
+            addi    a0, x0, 10
             ecall
-    
-            # exit program with exit code 0
-            addi    a7, x0, 10      
-            ecall
+        
+        # exit program with exit code 0
+        addi    a7, x0, 10      
+        ecall
+        
     \end{lstlisting}
-    
+
+\hfill \break
+\section{Run Examples}
+\begin{lstlisting}
+43923
+00000000000000001010101110010011
+00000000000000001010101110010011
+
+430940391
+00011001101011111010000011100111
+00011001101011111010000011100111
+
+-5
+11111111111111111111111111111011
+11111111111111111111111111111011
+
+-103012304
+11111001110111000010100000110000
+11111001110111000010100000110000
+\end{lstlisting}
+
+\section{Limitations}
+This algorithm works for all 32-bit integers, $-2,147,483,647 \leq i \leq 2,147,483,647$, and only fails beyond that due to the range limitations of a 32-bit system. The actual algorithm itself, described by $(k \BitAnd (1 \ShiftLeft n)) \ShiftRight n$, can work for any integer if these limitations are ignored, and that the loop counter is initialized to the proper amount of bits. Regardless, for the purposes of this lab, any valid integer input will work properly.
+
 \end{document}
