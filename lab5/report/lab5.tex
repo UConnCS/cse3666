@@ -25,7 +25,7 @@
 
 \lstset{basicstyle=\ttfamily, keywordstyle=\bfseries}
 \lstset{
-    language=[LaTeX]TeX,
+    language=Python,
     aboveskip=3mm,
     belowskip=3mm,
     showstringspaces=false,
@@ -144,8 +144,8 @@ carryout.next = a ...
         # --- Step 3
         # Use Python's logical operators to generate
         # the outputs for both the AND and OR gates.
-        and2_out = (a and mux1_out)
-        or2_out = (a or mux1_out)
+        or2_out = a or mux1_out
+        and2_out = a and mux1_out
         
         # --- Step 4
         # Implement a simple 1-Bit Adder circuit

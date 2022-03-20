@@ -2,7 +2,6 @@ from myhdl import block, always_comb
 
 @block
 def ALU1bit(a, b, carryin, binvert, operation, result, carryout):
-
     """ 1-bit ALU
 
     result and carrayout are output
@@ -24,20 +23,16 @@ def ALU1bit(a, b, carryin, binvert, operation, result, carryout):
     # The function is called if any Signal on the sensitivity list has a new value
     @always_comb 
     def alu1_logic():
-
-        # notb is an internal signal. we do not need define a MyHDL Signal
         notb = not b
-        # you can check the types of notb and b
-        # print(type(notb), type(b))
 
         # mux1
         mux1_out = (not binvert and b) or (binvert and notb)
 
-        # and2
-        and2_out = (a and mux1_out)
-        or2_out = (a or mux1_out)
-
+        # or2 / and2
+        or_out = a or mux1_out
+        and_out = a and mux1_out
         
+        # adder
         a1 = a ^ mux1_out
         a2 = a1 ^ carryin
         b1 = carryin and a1
@@ -47,17 +42,16 @@ def ALU1bit(a, b, carryin, binvert, operation, result, carryout):
         # carryout
         carryout.next = b1 or b2
 
+        # result
         if operation == 0:
-            result.next = and2_out
+            result.next = and_out
         elif operation == 1:
-            result.next = or2_out
+            result.next = or_out
         elif operation == 2:
             result.next = adder_sum
         elif operation == 3:
             result.next = 0
 
-    # return the logic  
-    # this is not in alu1_logic()
     return alu1_logic
 
 if __name__ == "__main__":
