@@ -15,21 +15,15 @@ def HW4Q1(f, a, b, c, d):
 
     @always_comb
     def comb():
-        # use and or not
-        # or use & | ~, but only keep the LSB in the end
-        # change the following line to give f correct value  
-        f.next = term(a, True, b, True, c, True, d, True) or \
-                 term(a, False, b, False, c, True, d, True) or \
-                 term(a, True, b, False, c, False, d, True) or \
-                 term(a, True, b, True, c, False, d, False) or \
-                 term(a, False, b, True, c, True, d, False) or \
-                 term(a, False, b, False, c, False, d, False)
+        f.next = term(not a, not b, not c, not d) or \
+                 term(a, b, not c, not d) or \
+                 term(not a, b, c, not d) or \
+                 term(not a, not b, c, d) or \
+                 term(a, not b, not c, d) or \
+                 term(a, b, c, d)
 
-    def term(a, a_not, b, b_not, c, c_not, d, d_not):
-        return (not a if a_not else a) and \
-               (not b if b_not else b) and \
-               (not c if c_not else c) and \
-               (not d if d_not else d)
+    def term(a, b, c, d):
+        return a and b and c and d
 
     # return the logic  
     return comb

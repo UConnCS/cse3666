@@ -26,27 +26,16 @@ def Detect3x(z, b, clock, reset):
     # initial state is 0
     state = Signal(intbv(0)[2:])
     next_state = Signal(intbv(0)[2:])
+    reg = Register(state, next_state, clock, reset)
 
-    # TODO
-    # instantiate a register here.
-    # next_state is the input and stat is the output
-
-    # generate next_state, based on state and b
     @always_comb
     def next_state_logic():
-        # TODO
-        # We can use if-elif-else statements in Python
-        # next_state.next = ... 
-        pass
+        next_state.next = state[1] ^ state[0] ^ b
 
-    # generate output
     @always_comb
     def z_logic():
-        # TODO
-        # generate z from state
-        pass
+        z.next = 1 if state == 0 else 0
 
-    # return all logic  
     return instances()
 
 if __name__ == "__main__":
