@@ -41,28 +41,21 @@ exit:
 # }
 
 uint2decstr:
-    addi  sp, sp, -16        # allocate 16 bytes on the stack
-    sw    ra, 12(sp)         # preserve ra by putting it on the stack
-    sw    s0, 8(sp)          # load s0 with the address of the string
-    mv    s0, a1             # load s0 with the value of v
-    addi  a5, x0, 10         # load a5 with the value of 9
-    bgeu  a1, a5, recurse    # if v > 10, call recurse
+    addi  sp, sp, -8         # allocate 8 bytes on the stack
+    sw    ra, 4(sp)          # preserve ra by putting it on the stack
+    sw    a1, 0(sp)          # preserve the string address by putting it on the stack
+    addi  t0, x0, 10         # store the value of 10 in t0
+    bltu  a1, t0, write       # if v < 10, the base case is reached, so jump to write
+    divu  a1, a1, t0         # divide v by 10 and store the result in a1
+    jal   ra, uint2decstr    # reinvoke uint2decstr
 
 write:
-    addi  a1, x0, 10         # load a1 with the value of 10
-    remu  s0, s0, a1         # s0 = v % 10
-    addi  s0, s0, 48         # s0 = s0 + 48
-    sb    s0, 0(a0)          # store the result in the string
-    sb    x0, 1(a0)          # store the null terminator
+    lw    ra, 4(sp)          # restore ra from the stack
+    lw    a1, 0(sp)          # load s0 with the address of the string
+    addi  t0, x0, 10         # store the value of 10 in t0
+    remu  t1, a1, t0         # take the remainder of v / 10
+    addi  t0, t1, '0'        # convert the remainder to a character
+    sb    t0, 0(a0)          # store the character on the stack
     addi  a0, a0, 1          # increment the address of the string
-    lw    ra, 12(sp)         # restore ra
-    lw    s0, 8(sp)          # restore s0
-    addi  sp, sp, 16         # move stack pointer back
-    jr    ra                 # return to caller
-
-recurse:
-    addi  a1, x0, 10         # load a1 with the value of 10
-    divu  a1, s0, a1         # a1 = v / 10
-    auipc t0, 0              # save current address in t0
-    jalr  ra, t0, 0xFFFFFFB8 # invoke write 
-    jal   write              # jump to write
+    addi  sp, sp, 8          # restore the stack pointer
+    jr    ra                 # return to the caller

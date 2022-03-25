@@ -23,7 +23,7 @@ def ALU4bits(a, b, alu_operation, result, zero):
     # values from alu_operation with a combinational function
     bnegate = alu_operation(2)      # bit 2    
     # like any range in Python, upper bound is open and lower is closed. 
-    operation = alu_operation(2,0)  # bits 1 and 0
+    operation = alu_operation(2, 0)  # bits 1 and 0
 
     # cout is a list of Signals
     # Each element on the list, like cout[0] is an object of Signal class 
@@ -38,16 +38,16 @@ def ALU4bits(a, b, alu_operation, result, zero):
     result_bits = [Signal(bool(0)) for _ in range(4)]
 
     # TODO
-    # instantiat four 1-bit ALUs
+    # instantiate four 1-bit ALUs
     # 
-    # Use shadow signals to connnect individual bits in 
+    # Use shadow signals to connect individual bits in 
     # signals `a` and `b` to 1-bit ALUs. 
     # a(0) is a shadow signal that follows bit 0 in a
     # a[0] is bit 0's current value and it is not a Signal
-    alu1_0 = ALU1bit(a(0), b(0), bnegate, bnegate, operation, result_bits[0], cout[0]);
-    alu1_1 = ALU1bit(a(1), b(1), bnegate, bnegate, operation, result_bits[1], cout[1]);
-    alu1_2 = ALU1bit(a(2), b(2), bnegate, bnegate, operation, result_bits[2], cout[2]);
-    alu1_3 = ALU1bit(a(3), b(3), bnegate, bnegate, operation, result_bits[3], cout[3]);
+    alu1_0 = ALU1bit(a(0), b(0), bnegate, bnegate, operation, result_bits[0], cout[0])
+    alu1_1 = ALU1bit(a(1), b(1), bnegate, bnegate, operation, result_bits[1], cout[1])
+    alu1_2 = ALU1bit(a(2), b(2), bnegate, bnegate, operation, result_bits[2], cout[2])
+    alu1_3 = ALU1bit(a(3), b(3), bnegate, bnegate, operation, result_bits[3], cout[3])
 
     @always_comb
     def comb_output():
@@ -60,7 +60,15 @@ def ALU4bits(a, b, alu_operation, result, zero):
         # To set individual bits in `result`, we can do
         #   result.next[0] = ... 
         # To generate zero, we use Python operators `or` and `not`
-        
+        #   zero.next = ...
+        #
+        # You may find this link useful:
+        # https://stackoverflow.com/questions/9662346/how-to-use-python-bit-operations-like-or-and-not
+        # print("result_bits:", result_bits)
+        result.next = concat(*result_bits)
+
+        # take all results and nor them
+        zero.next = not (result_bits[0] or result_bits[1] or result_bits[2] or result_bits[3])
 
     # return all logic  
     return instances()
