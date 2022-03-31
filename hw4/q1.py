@@ -25,7 +25,7 @@ def HW4Q1(f, a, b, c, d):
     def term(a, b, c, d):
         return a and b and c and d
 
-    # return the logic  
+    # return the logic
     return comb
 
 if __name__ == "__main__":
