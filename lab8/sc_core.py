@@ -1,4 +1,5 @@
 # Copyright 2021-2022 Zhijie Shi. All rights reserved. See LICENSE.txt.
+
 from myhdl import * 
 
 from hardware.register import RegisterE
@@ -31,53 +32,32 @@ def RISCVCore(imem, dmem, rf, clock, reset, env):
 
     max_pc = max(imem.keys()) 
     init_pc = min(imem.keys()) 
-
-    # signals
     sig = RISCVSignals(init_pc)
 
-    # TODO
-    # instantiate hardware modules 
-    # check the diagram, make sure nothing is missing
-    # and signals are connected correctly
-    # 
-
-    # for example, PC register is instantiated with the following line
+    adder1 = Adder(sig.PC4, sig.PC, sig.Const4)
+    adder2 = Adder(sig.BranchTarget, sig.PC, sig.immediate)
+    
+    mux1 = Mux2(sig.ALUInput2, sig.ReadData2, sig.immediate, sig.ALUSrc)
+    mux2 = Mux2(sig.WriteData, sig.ALUResult, sig.MemReadData, sig.MemtoReg)
+    mux3 = Mux2(sig.NextPC, sig.PC4, sig.BranchTarget, sig.PCSrc)
+    
     regPC = RegisterE(sig.PC, sig.NextPC, sig.signal1, clock, reset)
+    pcSrc = And2(sig.PCSrc, sig.Branch, sig.Zero)
+    immGen = ImmGen(sig.immediate, sig.instruction)
+    
+    alu1 = ALU(sig.ALUResult, sig.Zero, sig.ReadData1, sig.ALUInput2, sig.ALUOperation)
+    aluControl = ALUControl(sig.ALUOp, sig.instr30, sig.funct3, sig.ALUOperation)
+    mainControl = MainControl(sig.opcode, sig.ALUOp, sig.ALUSrc, sig.Branch, sig.MemRead, sig.MemWrite, sig.MemtoReg, sig.RegWrite)
+    
+    regFile = RegisterFile(sig.ReadData1, sig.ReadData2, sig.rs1, sig.rs2, sig.rd, sig.WriteData, sig.RegWrite, rf, clock, posedge = True)
+    
+    insMemory = Rom(sig.instruction, sig.PC, imem)
+    dataMemory = Ram(sig.MemReadData, sig.ReadData2, sig.ALUResult, sig.MemRead, sig.MemWrite, dmem, clock)
 
-    # instantiate the ALU
-    alu = ALU(sig.signal1, sig.signal2, sig.signal3, sig.signal4, clock, reset)
-
-    # instantiate the Adder
-    adder = Adder(sig.signal1, sig.signal2, sig.signal3, clock, reset)
-
-    # instantiate the mux
-    mux = Mux2(sig.signal1, sig.signal2, sig.signal3, sig.signal4, clock, reset)
-
-    # instantiate the register file
-    regfile = RegisterFile(rf, sig.signal1, sig.signal2, sig.signal3, sig.signal4, clock, reset)
-
-    # instantiate the main control
-    mainctrl = MainControl(sig.signal1, sig.signal2, sig.signal3, sig.signal4, clock, reset)
-
-    # instantiate the ALU control
-    aluctrl = ALUControl(sig.signal1, sig.signal2, sig.signal3, sig.signal4, clock, reset)
-
-    # instantiate the immediate generator
-    immgen = ImmGen(sig.signal1, sig.signal2, sig.signal3, sig.signal4, clock, reset)
-
-    # instantiate the RAM
-    ram = Ram(dmem, sig.signal1, sig.signal2, sig.signal3, sig.signal4, clock, reset)
-
-    # instantiate the ROM
-    rom = Rom(imem, sig.signal1, sig.signal2, sig.signal3, sig.signal4, clock, reset)
-
-
-    ##### No need to change the following logics
     @always_comb
     def set_done():
         env.done.next = sig.PC > max_pc  
 
-    # print at the negative edge. for simulation only 
     @always(clock.negedge)
     def print_logic():
         if env.print_enable:

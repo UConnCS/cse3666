@@ -1,0 +1,137 @@
+\documentclass{article}
+\usepackage[utf8]{inputenc}
+
+\title{CSE3666 — Lab 9}
+\author{Mike Medved}
+\date{April 30th, 2022}
+
+\usepackage{color}
+\usepackage{caption}
+\usepackage{amsthm}
+\usepackage{amssymb} 
+\usepackage{amsmath}
+\usepackage{listings}
+\usepackage{listings}
+\usepackage{graphicx}
+\usepackage[margin=1in]{geometry} 
+\usepackage[scaled=0.85]{FiraMono}
+\usepackage[table]{xcolor}
+
+\newcommand*\BitAnd{\mathbin{\&}}
+\newcommand*\BitOr{\mathbin{|}}
+\newcommand*\ShiftLeft{\ll}
+\newcommand*\ShiftRight{\gg}
+\newcommand*\BitNeg{\ensuremath{\mathord{\sim}}}
+
+\lstset{basicstyle=\ttfamily, keywordstyle=\bfseries}
+\lstset{
+    language=Python,
+    aboveskip=3mm,
+    belowskip=3mm,
+    showstringspaces=false,
+    columns=flexible,
+    basicstyle={\small\ttfamily},
+    numbers=none,
+    numberstyle=\tiny\color{gray},
+    keywordstyle=\color{blue},
+    commentstyle=\color{dkgreen},
+    stringstyle=\color{mauve},
+    breaklines=true,
+    breakatwhitespace=true,
+    tabsize=3
+}
+
+\definecolor{dkgreen}{rgb}{0,.6,0}
+\definecolor{mauve}{rgb}{224,176,255}
+
+\begin{document}
+\graphicspath{ {.} }
+
+\maketitle
+
+\section{Prompt}
+In this lab, we experiment with data cache simulator in RARS. It helps us understand how cache works.
+
+$\hfill \break$
+The RISC-V program we will use in experiment is lab9-cache.s. The program reads words from a word array warray for 10240 times, starting from warray[0]. The index is incremented by the stride size after each read. The default stride size is 1. If the index is out of range, it is reset to 0. The pseudocode is as follows.
+
+\begin{lstlisting}[language=Python]
+    index = 0
+    for i in range(10240)
+        read warray[index]
+        index += stride
+        if index >= len(warray)
+            index = 0
+
+\end{lstlisting}
+
+\section{Task 1}
+I predict that cache hit rate will be 75\%, as there are four cache operations per block offset, and three of them will succeed since the first operation is in place to put the element into cache.
+
+\begin{table}[!htb]
+    \centering
+    \caption{Cache Simulation}
+    \begin{tabular}{|l|l|l|l|>{\columncolor{green!20}}l|}
+        \hline
+        \textbf{address} & \textbf{cache index} & \textbf{tag} & \textbf{block offset} & \textbf{result}   \\ \hline
+        0x10010000       & 0                    & 0x00200200   & 0                     & miss              \\ \hline
+        0x10010004       & 0                    & 0x00200200   & 0                     & hit               \\ \hline
+        0x10010008       & 0                    & 0x00200200   & 0                     & hit               \\ \hline
+        0x1001000C       & 0                    & 0x00200200   & 0                     & hit               \\ \hline
+        0x10010010       & 0                    & 0x00200200   & 1                     & miss              \\ \hline
+        0x10010014       & 0                    & 0x00200200   & 1                     & hit               \\ \hline
+        0x10010018       & 0                    & 0x00200200   & 1                     & hit               \\ \hline
+        0x1001001C       & 0                    & 0x00200200   & 1                     & hit               \\ \hline
+        0x10010020       & 0                    & 0x00200200   & 2                     & miss              \\ \hline
+        0x10010024       & 0                    & 0x00200200   & 2                     & hit               \\ \hline
+    \end{tabular}
+\end{table}
+
+\hfill \break
+The number of bits per field is given by the above table, with the complete cache address being 32 bits, the cache index being \textbf{3 bits}, the tag being \textbf{25 bits}, and the block offset being \textbf{4 bits}. I predicted that the cache hit rate will be 75\%, and by observing the above data, we can clearly see that the observation was confirmed since 3/4 operations per block offset were successful, while one missed.
+
+\break
+\section{Task 2}
+I predict that the cache hit rate will be 75\%, as before due to the same reason - since the block size of 4 words, the first access will always miss, and the subsequent accesses will hit, giving a 3/4 success rate. 
+
+\begin{table}[!htb]
+    \centering
+    \caption{Cache Simulation}
+    \begin{tabular}{|l|l|>{\columncolor{green!20}}l|>{\columncolor{green!20}}l|}
+        \hline
+        \textbf{blocks} & \textbf{cache size} & \textbf{hit rate} & \textbf{misses} \\ \hline
+        8               & 128 bytes           & 75\%              & 2560            \\ \hline
+        16              & 256 bytes           & 75\%              & 2560            \\ \hline
+        32              & 512 bytes           & 75\%              & 2560            \\ \hline
+        64              & 1024 bytes          & 99\%              & 64              \\ \hline
+        128             & 2048 bytes          & 99\%              & 64              \\ \hline
+    \end{tabular}
+    \end{table}
+
+\hfill \break
+By observing the above collected data, we can clearly see that the cache hit rate is 75\% when the array size is greater than that of the cache size. However, once the cache size exceeds that of the array size, the cache hit rate increases substantially to nearly 100\% since the cache can be populated with all array values, thus mitigating the inherent reason that the smaller cache missed 25\% of the time.
+
+\hfill \break
+In order to predict the cache hit and miss rates if the size of $warray$ is increased by arbitrary amounts we can use the information we previous learned about caches. For example, if $size_{cache} < size_{array}$, then the cache hit rate will be constant since the cache will need to be repopulated periodically when it fills up. However, if $size_{cache} > size_{array}$, all array items can be populated into the cache, and therefore the cache hit rate will be close to 100\%.
+
+\section{Task 3}
+I predict that the cache hit rate will be 88\%, since the cache block size is doubled the ratio of hit/miss will be 7/8 which comes out to be roughly 88\%. 
+
+\begin{table}[!htb]
+    \centering
+    \caption{Cache Simulation}
+    \begin{tabular}{|l|l|>{\columncolor{green!20}}l|>{\columncolor{green!20}}l|}
+        \hline
+        \textbf{blocks} & \textbf{cache size} & \textbf{hit rate} & \textbf{misses} \\ \hline
+        8               & 256 bytes           & 88\%              & 1280            \\ \hline
+        16              & 512 bytes           & 88\%              & 1280            \\ \hline
+        32              & 1024 bytes          & 100\%             & 32              \\ \hline
+        64              & 2048 bytes          & 100\%             & 32              \\ \hline
+        128             & 4096 bytes          & 100\%             & 32              \\ \hline
+    \end{tabular}
+\end{table}
+
+\hfill \break
+As before, the above data confirms that the cache hit rate is 88\% when the cache size is smaller than the array size. However, if the cache size is larger than the array size, the cache hit rate will be close to 100\% since the cache can be populated with all array values, thus mitigating the inherent reason that the smaller cache missed 25\% of the time.
+
+\end{document}
